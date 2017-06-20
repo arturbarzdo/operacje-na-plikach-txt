@@ -8,6 +8,8 @@
 <div class="tytul">Sprawdzenie poprawności automatu</div>
 <?php
 
+//wczytanie pliku tekstowego
+
 $plik_tmp = $_FILES['plik']['tmp_name']; 
 $plik_nazwa = $_FILES['plik']['name']; 
  move_uploaded_file($plik_tmp, "pliki/$plik_nazwa");
@@ -19,6 +21,16 @@ while(!feof($fp))
    $i++;
 }
 
+// usowanie pustych linni z tablicy
+$count = count($linia);
+ 
+for($i=0; $i< $count; $i++)
+{
+ if($linia[$i] == '' or empty($linia[$i]))
+ {
+  unset($linia[$i]);
+ }
+}
 //sprawdzanie czy automat został zainicjowany/////////////////////////////////////////////
 
 if("begin automaton"==$linia[0]){
@@ -43,13 +55,6 @@ if("begin automaton"==$linia[0]){
 		echo '<div class="blad">Nieodpowiednia ilość stanów <br/> zadeklarowana liczba stanów = '.(int)$liczba_stanów[1].'</div>';
 	}
 	
-	//czy linia kończy się średnikiem///////////////////////////////////////////////////
-	
-	$znak_końca_lini = strlen($linia[1]);
-	//echo $linia[1][$znak_końca_lini-1]."<br/><br/>";
-	if($linia[1][$znak_końca_lini-1]!=";"){
-		echo '<div class="blad">brak średnika na końcu lini drugiej</div>';
-	}
 	
 	//**********************************************************************************
 	
@@ -57,31 +62,66 @@ if("begin automaton"==$linia[0]){
 	//czy podany został przynajmniej jeden stan początkowy////////////////////////////// 
 	
 	$stan_poczatkowy=strstr($linia[2], ":");
-	//echo $stan_poczatkowy."<br/><br/>";
-	switch($stan_poczatkowy){
-		case "":
-			echo '<div class="blad">brak stanu początkowego</div>';
-			break;
-		case ":":
-			echo '<div class="blad">brak stanu początkowego</div>';
-			break;
-		case ":;":
-			echo '<div class="blad">brak stanu początkowego</div>';
-			break;
-		default:
-			echo '<div class="pop">stan początkowy istnieje</div>';
-	}
+	$stan_poczatkowy = str_replace(':','',$stan_poczatkowy);
+	
+		
+		$zmiennaPomocnicza = true;
+		$iteracja = 0;
+		
+		
+		while($zmiennaPomocnicza != false){
+			
+			$stanOk = false;
+			
+			if (@$stan_poczatkowy[$iteracja] == 'a'){
+				$stanOk = true;
+			}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+			
+			
+			if (is_numeric(@$stan_poczatkowy[$iteracja+1])){
+				$stanOk = true;
+			}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+			
+			if ((@$stan_poczatkowy[$iteracja+2] == ',')||(@$stan_poczatkowy[$iteracja+2] == ';')){
+				$stanOk = true;
+			if (@$stan_poczatkowy[$iteracja+2] == ';'){
+				
+				$zmiennaPomocnicza = false;
+			}}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+			
+			
+			
+		$iteracja+=3;
+		
+		}
+		if($stanOk == true){
+			echo "<div class='pop'>Stany wejściowe ok</div>";
+		}else echo "<div class='blad'>błąd stanów wejściowych</div>";
+		
+		
 	
 	//czy liczba stanów odpowiada ilości lini stanów
 	
 	$liczba_lini = (int)count($linia);
 	$liczba_lini_stanow = ((int)$liczba_stanów[1]*2);
-	$wygenerowana_liczba_lini_stanow=(int)count($linia)-7;
+	$wygenerowana_liczba_lini_stanow=(int)count($linia)-6;
 		if($liczba_lini_stanow == $wygenerowana_liczba_lini_stanow){
-			echo '<div class="pop">poprawna ilość lini przejść</div>';
+			echo '<div class="pop">poprawna ilość lini</div>';
 		}
 		else{
-			echo '<div class="blad">nieodpowiednia ilość przejść</div>';
+			echo '<div class="blad">nieodpowiednia ilość linni</div>';
 		}
 	//sprawdzanie czy wywołana została komenda begin transitions /////////////////////////////////////////////
 
@@ -93,28 +133,124 @@ if("begin automaton"==$linia[0]){
 				echo '<div class="blad">błąd - błąd begin transitions</div>';
 			}
 	
+	// sprawdzaanie wygenerowanych stanów przejść automatu
+	
+	for($i = 4 ; $i <$liczba_lini_stanow +5; $i++){
+		$stany_wygenerowane=strstr($linia[$i], ":");
+	
+	$stany_wygenerowane = str_replace(':','',$stany_wygenerowane);
+	
+		
+		$zmiennaPomocnicza = true;
+		$iteracja = 0;
+		if($stany_wygenerowane == ";"){
+			$stanOk = true;
+		}
+		else{
+		while($zmiennaPomocnicza != false){
+			
+			$stanOk = false;
+			
+			if (@$stany_wygenerowane[$iteracja] == 'a'){
+				$stanOk = true;
+			}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+			
+			
+			if (is_numeric(@$stany_wygenerowane[$iteracja+1])){
+				$stanOk = true;
+			}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+			
+			if ((@$stany_wygenerowane[$iteracja+2] == ',')||(@$stany_wygenerowane[$iteracja+2] == ';')){
+				$stanOk = true;
+			if (@$stany_wygenerowane[$iteracja+2] == ';'){
+				
+				$zmiennaPomocnicza = false;
+			}}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+			
+			
+			
+		$iteracja+=3;
+		
+		}
+		}
+		if($stanOk != true){
+			break;
+		}
+		
+	}
+			if($stanOk == true){
+			echo "<div class='pop'>Transition ok</div>";
+		}else echo "<div class='blad'>błąd transition</div>";
+
+
+
+	
+	
 	//czy podany został przynajmniej jeden stan końcowy////////////////////////////// 
 	
-	$stan_koncowy=strstr($linia[$liczba_lini-3], ":");
-	//echo $stan_poczatkowy."<br/><br/>";
-	switch($stan_koncowy){
-		case "":
-			echo '<div class="blad">brak stanu końcowy</div>';
-			break;
-		case ":":
-			echo '<div class="blad">brak stanu końcowy</div>';
-			break;
-		case ":;":
-			echo '<div class="blad">brak stanu końcowy</div>';
-			break;
-		default:
-			echo '<div class="pop">stan końcowy istnieje</div>';
-	}
+	$stan_koncowy=strstr($linia[$liczba_lini-2], ":");
 	
+	$stan_koncowy = str_replace(':','',$stan_koncowy);
+		
+		
+		$zmiennaPomocnicza = true;
+		$iteracja = 0;
+		
+		
+		while($zmiennaPomocnicza != false){
+			
+			$stanOk = false;
+			
+			if (@$stan_koncowy[$iteracja] == 'a'){
+				$stanOk = true;
+			}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+			
+		
+			if (is_numeric(@$stan_koncowy[$iteracja+1])){
+				$stanOk = true;
+			}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+			
+			if ((@$stan_koncowy[$iteracja+2] == ',')||(@$stan_koncowy[$iteracja+2] == ';')){
+				$stanOk = true;
+			if (@$stan_koncowy[$iteracja+2] == ';'){
+				
+				$zmiennaPomocnicza = false;
+			}}else {
+				$stanOk = false;
+				$zmiennaPomocnicza = false;
+			}
+			
+		$iteracja+=3;
+		
+		}
+		if($stanOk == true){
+			echo "<div class='pop'>Stany wyjściowe ok</div>";
+		}else echo "<div class='blad'>błąd stanów wyjściowych</div>";
+		
 	//sprawdzenie czy automat został zakończony poprawnie///////////////////////////////
 	
 	//echo $linia[$liczba_lini-2];
-	if("end automaton" == $linia[$liczba_lini-2]){
+	if("end automaton" == $linia[$liczba_lini-1]){
 		
 		echo '<div class="pop">automat zakończony poprawnie</div>';
 	}
@@ -122,5 +258,18 @@ if("begin automaton"==$linia[0]){
 			echo '<div class="blad">błąd - automat nie został zakończony poprawną instrukcją</div>';
 		}
 	
+
+
+	
+
+
+
+
+
+
+
+
+
+
 	
 ?>
